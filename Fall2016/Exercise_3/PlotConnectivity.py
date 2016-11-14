@@ -8,7 +8,6 @@ Exercise 3
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 def PlotConnectivity(CIJ):
   """
   Displays a ring network with connectivity matrix CIJ.
@@ -48,4 +47,3 @@ def PlotConnectivity(CIJ):
   plt.scatter(X_pos, Y_pos, s=80, c='r', marker='o', alpha=1)
   plt.axis('off')
   plt.show()
-
