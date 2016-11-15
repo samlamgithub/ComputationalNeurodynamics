@@ -36,4 +36,3 @@ def NetworkRingLattice(N, k):
         CIJ[j, i] = 1
 
   return(CIJ)
-
