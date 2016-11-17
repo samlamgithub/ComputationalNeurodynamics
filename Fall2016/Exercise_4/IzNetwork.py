@@ -13,15 +13,15 @@ class IzNetwork(object):
   the neurons is automatically initialised, and parameters and connectivity
   matrices can be set with the appropriate setter methods. All class members are
   hidden (i.e. underscored) except for the state of the neurons (v,u).
-  
+
   For both the delay and weight connectivity matrices, A[i,j] refers to the
   connection from neuron i to j. This was done this way (against standard
   convention) because the algorithm is easier to vectorise this way.
-  
+
   Vectorisation with inhomogeneous time-delays is accomplished via a cylindrical
   accumulator array X, that is updated at every time step. More details in the
   inline comments.
-  
+
   References:
 
   Izhikevich, E. M. (2003). Simple model of spiking neurons. IEEE Transactions
@@ -58,7 +58,7 @@ class IzNetwork(object):
   def setDelays(self, D):
     """
     Set synaptic delays.
-    
+
     Inputs:
     D  -- np.array or np.matrix. The delay matrix must contain nonnegative
           integers, and must be of size N-by-N, where N is the number of
@@ -177,4 +177,3 @@ class IzNetwork(object):
     self._cursor += 1
 
     return fired_idx
-

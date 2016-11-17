@@ -11,13 +11,15 @@ import numpy.random as rn
 import matplotlib.pyplot as pl
 import IzNetwork as iz
 
-def ConnectLayers(N1, N2):
+def ConnectLayers():
   """
-  Create a network with two layers of excitatory Izhikevich neurons with N1
-  and N2 neurons, respectively.
+  Create a network with 800 excitatory Izhikevich neurons with 200
+  Inhibitory neurons, respectively.
   """
+  p = 0.0
   moduleNum = 8
   ExiNumPerMod = 100
+  ExiModConnNum = 1000
   InhiNum = 200
   N = moduleNum * ExiNumPerMod + InhiNum
   Dmax = 20  # Max synaptic delay, in ms
@@ -38,24 +40,61 @@ def ConnectLayers(N1, N2):
   ItoECD = lambda:1
   ItoICD = lambda:1
 
+  Modules = np.array([])
+  EtoEMatrix = np.zeros([ExiNumPerMod*moduleNum, ExiNumPerMod*moduleNum])
+  for i in range(moduleNum):
+      A = NetworkWattsStrogatz(ExiNumPerMod, ExiModConnNum, p, EtoIW)
+      Modules.append(A)
+      EtoEMatrix[i*ExiNumPerMod: , i*ExiNumPerMod: ] = A
+
+  EtoIMatrix = np.zeros([ExiNumPerMod*moduleNum, InhiNum])
+  EtoIs = []
+  for i in range(4):
+      A = np.fromfunction(lambda i, j: EtoIW if i==j else 0.0, (InhiNum, InhiNum), dtype=double)
+      EtoIs.append(A)
+
+  EtoIMatrix = np.bmat([[EtoIs[0]],[EtoIs[1]],[EtoIs[2]],[EtoIs[3]]])
+
+  ItoEMatrix = np.fromfunction(ItoEW, (InhiNum, ExiNumPerMod*moduleNum), dtype=double)
+  ItoIMatrix = np.fromfunction(ItoIEW, (InhiNum, InhiNum), dtype=double)
+
   # Build network as a block matrix. Block [i,j] is the connection from
   # layer i to layer j
-  W = np.bmat([[np.zeros((N1,N1)), F*np.ones((N1,N2))],
-               [np.zeros((N2,N1)),  np.zeros((N2,N2))]])
-  D = Dmax*np.ones((N,N), dtype=int)
+  W = np.bmat([[EtoESF * EtoEMatrix, EtoISF * EtoIMatrix],
+               [ItoESF * ItoEMatrix, ItoISF * ItoIMatrix]])
+
+  EtoECDMatrix = np.fromfunction(EtoECD, (ExiNumPerMod*moduleNum, ExiNumPerMod*moduleNum), dtype="double")
+
+  D = np.ones((1000,1000), dtype="double")
+  D[0:800,0:800] = ExiNumPerMod*moduleNum
 
   # All neurons are heterogeneous excitatory regular spiking
-  r = rn.rand(N)
-  a = 0.02*np.ones(N)
-  b = 0.2*np.ones(N)
-  c = -65 + 15*(r**2)
-  d = 8 - 6*(r**2)
-
-  # Inhibitory
-  # a = 0.02*np.ones(N)
-  # b = 0.25*np.ones(N)
-  # c = -65 * r
-  # d = 2 * r
+  As = []
+  Bs = []
+  Cs = []
+  Ds = []
+  for i in range(1000):
+      r = rn.rand(N)
+      if i < 800:
+        # Exi
+        Ea = 0.02*np.ones(N)
+        Eb = 0.2*np.ones(N)
+        Ec = -65 + 15*(r**2)
+        Ed = 8 - 6*(r**2)
+        As.append(Ea)
+        Bs.append(Eb)
+        Cs.append(Ec)
+        Ds.append(Ed)
+      else:
+        # Inhibitory
+        Ia = 0.02*np.ones(N)
+        Ib = 0.25*np.ones(N)
+        Ic = -65 * r
+        Id = 2 * r
+        As.append(Ia)
+        Bs.append(Ib)
+        Cs.append(Ic)
+        Ds.append(Id)
 
   # Bursting
   # a = 0.02 * np.ones(N)
@@ -65,7 +104,7 @@ def ConnectLayers(N1, N2):
 
   net.setWeights(W)
   net.setDelays(D)
-  net.setParameters(a, b, c, d)
+  net.setParameters(As, Bs, Cs, Ds)
 
   return net
 
