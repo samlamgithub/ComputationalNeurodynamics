@@ -205,8 +205,8 @@ def main(p):
       R = np.zeros(len(T))
       Rx = np.array([])
       Ry = np.array([])
-      X = [[]] * 8
-      Y = [[]] * 8
+      MeanFireX = [[]] * 8
+      MeanFireY = [[]] * 8
 
       # Simulate
       c1 = 0
@@ -219,57 +219,58 @@ def main(p):
         for k in range(len(fIdx)):
             idx = fIdx[k]
             c1 += 1
-            # if idx < 800:
-            c2 +=1
-            # print "idx: ", idx
-            # print "idx/100: ", idx/100
-            # plt.plot([t], [idx])
-            Rx = np.append(Rx, t)
-            Ry = np.append(Ry, idx)
-        #         X[idx/100] = np.append(X[idx/100], t)
-        #         Y[idx/100] = np.append(Y[idx/100], idx)
-        # R[t] = len(fIdx)
-        # V[t,:],_ = net.getState()
+            if idx < 800:
+                c2 +=1
+                # print "idx: ", idx
+                # print "idx/100: ", idx/100
+                # plt.plot([t], [idx])
+                Rx = np.append(Rx, t)
+                Ry = np.append(Ry, idx)
+                MeanFireX[idx/100] = np.append(MeanFireX[idx/100], t)
+                MeanFireY[idx/100] = np.append(MeanFireY[idx/100], idx)
+            # R[t] = len(fIdx)
+            # V[t,:],_ = net.getState()
       print "len: ",  Rx.shape, Ry.shape, c1, c2
-      plt.plot(Rx, Ry, "o")
-      plt.show()
-      return 0
-    #   Xs = [[]] * 8
-    #   Ys = [[]] * 8
-    #   for z in range(8):
-    #       Xc = X[z]
-    #       Yc = Y[z]
-    #       for c in range(50):
-    #           startT = 20 * c
-    #           endT = startT + 50
-    #           summ = 0
-    #         #   count = 0
-    #         #   mean = 0
-    #           for v in range(len(Xc)):
-    #               if Xc[v] >= startT and Xc[v] < endT:
-    #                   summ += 1#Yc[v]
-    #                 #   count += 1
-    #         #   if count != 0:
-    #             #   mean = summ/count
-    #           Xs[z] = np.append(Xs[z], startT + 25)
-    #           Ys[z] = np.append(Ys[z], summ)
-      #
-    #   # Plot results
-    #   plt.figure()
-      #
-    #   ax1 = plt.subplot(211)
-    #   ax1.plot(Rx, Ry, "o")
-    #   ax1.set_ylabel('number of firing neurons')
-    #   ax1.set_title('raster')
-      #
-    #   ax1 = plt.subplot(212)
-    #   for b in np.arange(8):
-    #       ax1.plot(Xs[b], Ys[b])
-    #   ax1.set_ylabel('Neuron number')
-    #   ax1.set_title('Time')
-      #
+    #   plt.plot(Rx, Ry, "o")
     #   plt.show()
     #   return 0
+      MeanFireXXs = [[]] * 8
+      MeanFireYYs = [[]] * 8
+      for mInx in range(8):
+          Xc = MeanFireX[mInx]
+          Yc = MeanFireY[mInx]
+          for windowIndex in range(50):
+              startT = 20 * windowIndex
+              endT = startT + 50
+              countPoint = 0
+              for v in range(len(Xc)):
+                  if Xc[v] >= startT and Xc[v] < endT:
+                      countPoint += 1
+              MeanFireXXs[mInx] = np.append(MeanFireXXs[mInx], startT + 25)
+              MeanFireYYs[mInx] = np.append(MeanFireYYs[mInx], countPoint)
+
+      # Plot results
+      plt.figure()
+
+      ax1 = plt.subplot(211)
+      ax1.plot(Rx, Ry, "o")
+      ax1.set_ylabel('Neuron number')
+      ax1.set_xlabel('Time(ms) + 0s')
+      ax1.set_xlim(0, 1000)
+      ax1.set_ylim(0, 800)
+      ax1.set_title('Raster')
+
+      ax1 = plt.subplot(212)
+      for mIdnx in np.arange(8):
+          ax1.plot(MeanFireXXs[mIdnx], MeanFireYYs[mIdnx])
+      ax1.set_ylabel('Mean firing rate')
+      ax1.set_xlim(0, 1000)
+    #   ax1.set_ylim(0, 10)
+      ax1.set_ylabel('Neuron number')
+      ax1.set_title('Time(ms) + 0s')
+
+      plt.show()
+      return 0
 
 if __name__ == "__main__":
     ps = np.linspace(0, 0.5, 6)
