@@ -86,7 +86,7 @@ class IzNetwork(object):
     """
     if W.shape != (self._N, self._N):
       raise Exception('Weight matrix must be N-by-N.')
-    self._W = W
+    self._W = np.array(W)
 
 
   def setCurrent(self, I):
@@ -170,7 +170,9 @@ class IzNetwork(object):
     # D[i,j] timesteps into the future. That way, as the cursor moves X
     # contains all the input coming from time-delayed connections.
     for i in fired_idx:
-      self._X[(self._cursor + self._D[i, :])%self._Dmax, :] += self._W[i,:]
+        # print ">> ", (self._X[(self._cursor + self._D[i, :])%self._Dmax, range(self._N)]).shape, (self._W[i,:]).shape
+        # self._X[(self._cursor + self._D[i, :])%self._Dmax, :] += self._W[i,:]
+        self._X[(self._cursor + self._D[i, :])%self._Dmax, range(self._N)] += self._W[i,:]
 
     # Increment the cursor for the cylindrical array and clear accumulator
     self._X[self._cursor%self._Dmax,:] = np.zeros(self._N)
