@@ -16,19 +16,20 @@ import IzNetwork as iz
 
 def BackgroundNoise():
     lam = 0.01
-    samples = np.random.binomial(1, lam, 1000)
-    currents = map(lambda x: 15.0 if x > 0.0 else 0.0, samples)
+    samples = np.random.binomial(1, lam, 800)
+    currents = np.zeros([1000, ])
+    currents[0:800] = map(lambda x: 15.0 if x > 0.0 else 0.0, samples)
     return currents
 
 def Network(ExiNumPerMod, ExiModConnNum, EtoIW):
     AA = np.zeros([ExiNumPerMod, ExiNumPerMod])
-    connections = np.random.choice(10000, size=ExiModConnNum, replace=True)
+    connections = np.random.choice(10000, size=ExiModConnNum, replace=False)
     for ii in range(ExiModConnNum):
         vv = connections[ii]
         xindex = vv/ExiNumPerMod
         yindex = vv%ExiNumPerMod
         # if xindex != yindex:
-        AA[xindex, yindex] = 1.0
+        AA[xindex, yindex] = 17.0
     return AA
 
 def ConnectLayers(p):
@@ -50,8 +51,8 @@ def ConnectLayers(p):
   ItoISF = 1.0
 
   EtoEW = lambda:1.0
-  EtoIW = lambda:np.random.rand()
-  ItoEW = lambda:-np.random.rand()
+  EtoIW = lambda:50.0 * np.random.rand()
+  ItoEW = lambda:-2.0 * np.random.rand()
   ItoIW = lambda:-np.random.rand()
 
   EtoECD = lambda i, j:np.random.randint(1, 20, dtype="int")
@@ -86,22 +87,31 @@ def ConnectLayers(p):
                     while mNum == i:
                         mNum = np.random.randint(0, 8, dtype="int")
                     WireNum = np.random.randint(0, 100, dtype="int")
-                    B[i*100+xx, i*100+yy] = 0
+                    B[i*100+xx, i*100+yy] = 0.0
                     # print ">> ",mNum, WireNum, mNum*800+WireNum
-                    B[i*100+xx, mNum*100+WireNum] = 1.0
+                    B[i*100+xx, mNum*100+WireNum] = 17.0
 
   EtoEMatrix[0: 800, 0: 800] = B
 
   EtoIMatrix = np.zeros([ExiNumPerMod*moduleNum, InhiNum])
   EtoIs = np.zeros([800, 200])
   cc = 0
-  ccs = np.random.choice(200, size=200, replace=True)
+  ccs = np.random.choice(200, size=200, replace=False)
   for i in range(200):
       c = ccs[i]
       for jj in range(4):
           EtoIs[4*c+jj, i] = EtoIW()
       cc += 1
   # print("EtoIs shap: ", EtoIs.shape)
+
+  for o in range(800):
+      f = False
+      for ino in range(200):
+          if EtoIs[o, ino] != 0.0:
+              if not f:
+                  f = True
+              else:
+                  print "fff"
 
   EtoIMatrix = EtoIs
 
@@ -121,8 +131,8 @@ def ConnectLayers(p):
   # print "EtoIMatrix shape: ", EtoIMatrix.shape
   # print "ItoEMatrix shape: ", ItoEMatrix.shape
   # print "ItoIMatrix shape: ", ItoIMatrix.shape
-  W = np.bmat([[EtoESF * EtoEMatrix, EtoISF * EtoIMatrix],
-               [ItoESF * ItoEMatrix, ItoISF * ItoIMatrix]])
+  W = np.bmat([[EtoEMatrix, EtoIMatrix],
+               [ItoEMatrix, ItoIMatrix]])
 
   W = np.array(W)
   plt.matshow(W, vmin=-2.0, vmax=50.0)
@@ -143,14 +153,6 @@ def ConnectLayers(p):
   plt.matshow(D, vmin=1.0, vmax=20.0)
   plt.show()
 
-  Ea = 0.02
-  Eb = 0.2
-  Ec = -65 #+ 15*(r**2)
-  Ed = 8 #- 6*(r**2)
-  Ia = 0.02
-  Ib = 0.25
-  Ic = -65 #* r
-  Id = 2 #* r
   # All neurons are heterogeneous excitatory regular spiking
   As = np.zeros([1000, ])
   Bs = np.zeros([1000, ])
@@ -161,17 +163,29 @@ def ConnectLayers(p):
     #   r = rn.rand()
       if i < 800:
         # Exi
+        Ea = 0.02
+        Eb = 0.2
+        Ec = -65 #+ 15*(r**2)
+        Ed = 8 #- 6*(r**2)
         As[i] = Ea
         Bs[i] = Eb
         Cs[i] = Ec
         Ds[i] = Ed
       else:
         # Inhibitory
+        Ia = 0.02
+        Ib = 0.25
+        Ic = -65 #* r
+        Id = 2 #* r
         As[i] = Ia
         Bs[i] = Ib
         Cs[i] = Ic
         Ds[i] = Id
 
+  # print As
+  # print Bs
+  # print Cs
+  # print Ds
   # Bursting
   # a = 0.02 * np.ones(N)
   # b = 0.2 * np.ones(N)
@@ -184,7 +198,7 @@ def ConnectLayers(p):
 
   return net
 
-def main(p):
+def runSimulation(p):
       """
       Create and run the network with constant input.
       """
@@ -212,6 +226,7 @@ def main(p):
       # Simulate
       c1 = 0
       c2 = 0
+      net.setCurrent([15.0] * 1000)
       for t in xrange(len(T)):
         I = BackgroundNoise()
         net.setCurrent(I)
@@ -220,17 +235,17 @@ def main(p):
         for k in range(len(fIdx)):
             idx = fIdx[k]
             c1 += 1
-            # if idx < 800:
-            c2 +=1
-            # print "idx: ", idx
-            # print "idx/100: ", idx/100
-            # plt.plot([t], [idx])
-            Rx = np.append(Rx, t)
-            Ry = np.append(Ry, idx)
-            # MeanFireX[idx/100] = np.append(MeanFireX[idx/100], t)
-            # MeanFireY[idx/100] = np.append(MeanFireY[idx/100], idx)
-            # R[t] = len(fIdx)
-            # V[t,:],_ = net.getState()
+            if idx < 800:
+                c2 += 1
+                # print "idx: ", idx
+                # print "idx/100: ", idx/100
+                # plt.plot([t], [idx])
+                Rx = np.append(Rx, t)
+                Ry = np.append(Ry, idx)
+                MeanFireX[idx/100] = np.append(MeanFireX[idx/100], t)
+                MeanFireY[idx/100] = np.append(MeanFireY[idx/100], idx)
+                # R[t] = len(fIdx)
+                # V[t,:],_ = net.getState()
       print "len: ",  Rx.shape, Ry.shape, c1, c2
     #   plt.plot(Rx, Ry, "o")
     #   plt.show()
@@ -260,7 +275,7 @@ def main(p):
       ax1.set_ylabel('Neuron number')
       ax1.set_xlabel('Time(ms) + 0s')
       ax1.set_xlim(0, 1000)
-    #   ax1.set_ylim(0, 800)
+      ax1.set_ylim(0, 800)
       ax1.set_title('Raster')
 
       ax1 = plt.subplot(212)
@@ -277,4 +292,4 @@ def main(p):
 if __name__ == "__main__":
     ps = np.linspace(0, 0.5, 6)
     for p in ps:
-        main(p)
+    runSimulation(p)

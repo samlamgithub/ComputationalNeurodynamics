@@ -1,7 +1,7 @@
 """
 Computational Neurodynamics
 Exercise 2
-
+Thanks to Paul Vanhaesebrouck for bug-hunting.
 (C) Murray Shanahan et al, 2016
 """
 
@@ -23,24 +23,19 @@ class IzNetwork(object):
   inline comments.
 
   References:
-
   Izhikevich, E. M. (2003). Simple model of spiking neurons. IEEE Transactions
   on Neural Networks, 14(6), 1569-72. http://doi.org/10.1109/TNN.2003.820440
-
   Brette, R., & Goodman, D. F. M. (2011). Vectorized algorithms for spiking
   neural network simulation. Neural Computation, 23(6), 1503-35.
   http://doi.org/10.1162/NECO_a_00123
-
   """
 
   def __init__(self, N, Dmax):
     """
     Initialise network with given number of neurons and maximum transmission
     delay.
-
     Inputs:
     N     -- Number of neurons in the network.
-
     Dmax  -- Maximum delay in all the synapses in the network, in ms. Any
              longer delay will result in failing to deliver spikes.
     """
@@ -79,7 +74,6 @@ class IzNetwork(object):
   def setWeights(self, W):
     """
     Set synaptic weights.
-
     Inputs:
     W  -- np.array or np.matrix. The weight matrix must be of size N-by-N,
           where N is the number of neurons supplied in the constructor.
@@ -93,7 +87,6 @@ class IzNetwork(object):
     """
     Set the external current input to the network for this timestep. This
     only affects the next call to update().
-
     Inputs:
     I  -- np.array. Must be of length N, where N is the number of neurons
           supplied in the constructor.
@@ -132,7 +125,6 @@ class IzNetwork(object):
     Simulate one millisecond of network activity. The internal dynamics
     of each neuron are simulated using the Euler method with step size
     self._dt, and spikes are delivered every millisecond.
-
     Returns the indices of the neurons that fired this millisecond.
     """
 
@@ -170,9 +162,7 @@ class IzNetwork(object):
     # D[i,j] timesteps into the future. That way, as the cursor moves X
     # contains all the input coming from time-delayed connections.
     for i in fired_idx:
-        # print ">> ", (self._X[(self._cursor + self._D[i, :])%self._Dmax, range(self._N)]).shape, (self._W[i,:]).shape
-        # self._X[(self._cursor + self._D[i, :])%self._Dmax, :] += self._W[i,:]
-        self._X[(self._cursor + self._D[i, :])%self._Dmax, range(self._N)] += self._W[i,:]
+      self._X[(self._cursor + self._D[i, :])%self._Dmax, range(self._N)] += self._W[i,:]
 
     # Increment the cursor for the cylindrical array and clear accumulator
     self._X[self._cursor%self._Dmax,:] = np.zeros(self._N)
