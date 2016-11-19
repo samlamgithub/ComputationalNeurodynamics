@@ -133,50 +133,30 @@ def BuildNetwork(rewiringProb):
     # plt.matshow(CDMatrix, vmin=1.0, vmax=20.0)
     # plt.show()
 
-    # Ea = 0.02
-    # Eb = 0.2
-    # Ec = -65
-    # Ed = 8
-    # Ia = 0.02
-    # Ib = 0.25
-    # Ic = -65
-    # Id = 2
-    # # All neurons are heterogeneous excitatory or inhibitory regular spiking
-    # EAs = [Ea] * (ExiNumPerMod*moduleNum)
-    # IAs = [Ia] * InhiNum
-    # As = np.hstack((EAs, IAs))
-    # EBs = [Eb] * (ExiNumPerMod*moduleNum)
-    # IBs = [Ib] * InhiNum
-    # Bs = np.hstack((EBs, IBs))
-    # ECs = [Ec] * (ExiNumPerMod*moduleNum)
-    # ICs = [Ic] * InhiNum
-    # Cs = np.hstack((ECs, ICs))
-    # EDs = [Ed] * (ExiNumPerMod*moduleNum)
-    # IDs = [Id] * InhiNum
-    # Ds = np.hstack((EDs, IDs))
+    # All neurons are heterogeneous excitatory or inhibitory regular spiking
     As = np.zeros([1000, ])
     Bs = np.zeros([1000, ])
     Cs = np.zeros([1000, ])
     Ds = np.zeros([1000, ])
     for i in range(1000):
         #   print is
-        # r = rn.rand()
+        r = rn.rand()
         if i < 800:
             # Exi
             Ea = 0.02
             Eb = 0.2
-            Ec = -65 #+ 15*(r**2)
-            Ed = 8 #- 6*(r**2)
+            Ec = -65 + 15*(r**2)
+            Ed = 8 - 6*(r**2)
             As[i] = Ea
             Bs[i] = Eb
             Cs[i] = Ec
             Ds[i] = Ed
         else:
             # Inhibitory
-            Ia = 0.02
-            Ib = 0.25
-            Ic = -65 #* r
-            Id = 2 #* r
+            Ia = 0.02 + 0.08*r
+            Ib = 0.25 - 0.05*r
+            Ic = -65
+            Id = 2
             As[i] = Ia
             Bs[i] = Ib
             Cs[i] = Ic
@@ -242,7 +222,7 @@ def runSimulation(rewiringProb):
                 if Xc[v] >= startT and Xc[v] < endT:
                     countPoint += 1
             MeanFireXXs[mInx] = np.append(MeanFireXXs[mInx], startT + 25)
-            MeanFireYYs[mInx] = np.append(MeanFireYYs[mInx], countPoint)
+            MeanFireYYs[mInx] = np.append(MeanFireYYs[mInx], countPoint/50.0)
 
     # Plot results
     plt.figure()
@@ -267,5 +247,5 @@ def runSimulation(rewiringProb):
 
 if __name__ == "__main__":
     rewiringProbabilities = np.linspace(0, 0.5, 6)
-    # for rewiringP in rewiringProbabilities:
-    runSimulation(0.0)
+    for rewiringP in rewiringProbabilities:
+        runSimulation(rewiringP)
