@@ -6,15 +6,12 @@ Simulates the movement of a robot with differential wheels under the
 control of a spiking neural network. The simulation runs for a very
 long time --- if you get bored, press Ctrl+C a couple of times.
 
-**Note**: this code may not work properly in Ubuntu 16.04. See RobotRun4L-u16.py
-for a 16.04-compatible version.
-
 (C) Murray Shanahan et al, 2016
 """
 
 import numpy as np
 import numpy.random as rn
-import matplotlib.pyplot as plt
+import pylab
 from Environment import Environment
 from RobotConnect4L import RobotConnect4L
 from RobotUpdate import RobotUpdate
@@ -61,26 +58,61 @@ N4 = Nm
 
 print 'Preparing simulation'
 
-plt.figure(1)
+# Set voltage axes
+fig1 = pylab.figure(1)
+ax11 = fig1.add_subplot(221)
+ax12 = fig1.add_subplot(222)
+ax21 = fig1.add_subplot(223)
+ax22 = fig1.add_subplot(224)
+
+pl11 = ax11.plot(v[:,0:N1])
+ax11.set_title('Left sensory neurons')
+ax11.set_ylabel('Membrane potential (mV)')
+ax11.set_ylim(-90, 40)
+
+pl12 = ax12.plot(v[:,N1:(N1+N2)])
+ax12.set_title('Right sensory neurons')
+ax12.set_ylim(-90, 40)
+
+pl21 = ax21.plot(v[:,(N1+N2):(N1+N2+N3)])
+ax21.set_title('Left motor neurons')
+ax21.set_ylabel('Membrane potential (mV)')
+ax21.set_ylim(-90, 40)
+ax21.set_xlabel('Time (ms)')
+
+pl22 = ax22.plot(v[:,(N-N4):N])
+ax22.set_title('Right motor neurons')
+ax22.set_ylim(-90, 40)
+ax22.set_xlabel('Time (ms)')
+
+manager1 = pylab.get_current_fig_manager()
 
 # Draw Environment
-plt.figure(2)
-plt.xlim(0, xmax)
-plt.ylim(0, ymax)
-plt.title('Robot controlled by spiking neurons')
-plt.xlabel('X')
-plt.ylabel('Y')
+fig2 = pylab.figure(2)
+ax2 = fig2.add_subplot(111)
+ax2.axis([0, xmax, 0, ymax])
+ax2.set_title('Robot controlled by spiking neurons')
+ax2.set_xlabel('X')
+ax2.set_ylabel('Y')
 for Ob in Env.Obs:
-  plt.scatter(Ob['x'], Ob['y'], s=np.pi*(Ob['r']**2), c='lime')
+  ax2.scatter(Ob['x'], Ob['y'], s=np.pi*(Ob['r']**2), c='lime')
 
+manager2 = pylab.get_current_fig_manager()
 
-plt.ion()
-plt.show()
+# You can change the interval duration to make the video faster or slower
+timer = fig2.canvas.new_timer(interval=200)
 
+def StopSimulation():
+  global timer
+  timer.stop()
+
+t = 0
 
 ## SIMULATE
 print 'Start simulation'
-for t in xrange(len(T)):
+def RobotStep(args):
+  global t
+
   # Input from Sensors
   SL, SR = Env.GetSensors(x[t], y[t], w[t])
 
@@ -117,39 +149,27 @@ for t in xrange(len(T)):
                                        Umax, dt, xmax, ymax)
 
   ## PLOTTING
-  # Plot membrane potential
-  plt.figure(1)
-  plt.clf()
+  for i in range(Ns):
+    pl11[i].set_data(range(dt), v[:,i])
+    pl12[i].set_data(range(dt), v[:,i+Ns])
 
-  plt.subplot(221)
-  plt.plot(v[:,0:N1])
-  plt.subplot(221)
-  plt.title('Left sensory neurons')
-  plt.ylabel('Membrane potential (mV)')
-  plt.ylim(-90, 40)
+  for i in range(Nm):
+    pl21[i].set_data(range(dt), v[:,2*Ns+i])
+    pl22[i].set_data(range(dt), v[:,2*Ns+Nm+i])
 
-  plt.subplot(222)
-  plt.plot(v[:,(N1+1):(N1+N2)])
-  plt.title('Right sensory neurons')
-  plt.ylim(-90, 40)
+  ax2.scatter(x, y)
+  manager1.canvas.draw()
+  manager2.canvas.draw()
 
-  plt.subplot(223)
-  plt.plot(v[:,(N1+N2+1):(N-N4)])
-  plt.title('Left motor neurons')
-  plt.ylabel('Membrane potential (mV)')
-  plt.ylim(-90, 40)
-  plt.xlabel('Time (ms)')
+  t += 1
 
-  plt.subplot(224)
-  plt.plot(v[:,(N-N4+1):N])
-  plt.title('Right motor neurons')
-  plt.ylim(-90, 40)
-  plt.xlabel('Time (ms)')
+  if t == len(x)-1:
+    print 'Terminating simulation'
+    StopSimulation()
 
-  plt.draw()
+# Get the thing going
+timer.add_callback(RobotStep, ())
+timer.start()
 
-  # Plot robot trajectory
-  plt.figure(2)
-  plt.scatter(x, y, marker='.')
-  plt.draw()
+pylab.show()
 
