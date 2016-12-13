@@ -8,7 +8,7 @@ Run an example with two coupled neural oscillators.
 """
 
 import sys
-sys.path.append('../Exercise_2')
+sys.path.append('../../Exercise_2')
 
 import numpy as np
 import numpy.random as rn
@@ -218,4 +218,3 @@ if __name__ == '__main__':
   print "Mean synchronisation: ", phi
 
   plt.show()
-
